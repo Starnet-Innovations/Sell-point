@@ -14,14 +14,16 @@ class VerifyEmailController extends Controller
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
-        if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
-        }
+        // 1. Mark as verified in DB
+        $request->fulfill();
 
-        if ($request->user()->markEmailAsVerified()) {
-            event(new Verified($request->user()));
-        }
+        // 2. Prepare your Toaster notification
+        $notification = [
+            'message' => 'Email verified successfully!',
+            'alert-type' => 'success',
+        ];
 
-        return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+        // 3. Redirect to your index
+        return redirect('/index')->with($notification);
     }
 }
