@@ -17,9 +17,20 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
+
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'id' => 1,
+            'full_name' => 'Sell Point',
+            'email' => 'sellpoint@example.com',
+            'phone' => '08162587097', // Added because it's in your Fillable list
+            'password' => bcrypt('password123'),
+        ]);
+
+
+        $this->call([
+            ListingsTableSchemaSeeder::class,
+            CategorySeeder::class,
+            ListingsTableSeeder::class,
         ]);
     }
 }
