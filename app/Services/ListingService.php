@@ -45,7 +45,7 @@ class ListingService
         
         // Search within JSON attributes (MySQL)
         foreach ($filters as $key => $value) {
-            if (!in_array($key, ['listing_type', 'min_price', 'max_price', 'location'])) {
+            if (!in_array($key, ['listing_type', 'min_price', 'max_price', 'address', 'city', 'state'])) {
                 $query->whereJsonContains("attributes->{$key}", $value);
             }
         }

@@ -1,47 +1,74 @@
 <?php
-// database/seeders/ListingsTableSeeder.php
 
 namespace Database\Seeders;
 
-use App\Models\Listing;
-use Illuminate\Database\Seeder;
+use App\Models\Category;
+use App\Models\ListingSchema;
 use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ListingsTableSeeder extends Seeder
 {
     public function run()
     {
-        $faker = Faker::create();
-        $schemas = Listing::getSchemas();
-
+        $faker = Faker::create();       
+     
+        
+        // Get all schemas
+        $schemas = ListingSchema::getSchemas();
+        
+        if (empty($schemas)) {
+            $this->command->error('No schemas found!');
+            return;
+        }
+        
         foreach ($schemas as $type => $schema) {
-            // Create 10 listings for each type
-            for ($i = 0; $i < 10; $i++) {
+            $categoryTitle = ucwords(str_replace('_', ' ', $type));
+            $category = DB::table('categories')->where('title', $categoryTitle)->first();
+            
+            // Create 5 listings per type
+            for ($i = 0; $i < 5; $i++) {
                 $attributes = [];
-
+                
                 foreach ($schema as $fieldName => $fieldConfig) {
                     $attributes[$fieldName] = $this->generateFakeValue($faker, $fieldConfig);
                 }
-
-                Listing::create([
+                
+                // Generate title
+                $title = $this->generateTitle($faker, $type, $attributes);
+                
+                // Prepare data array with EXPLICIT title field
+                $data = [
+                    'category_id' => $category ? $category->id : null,
                     'listing_type' => $type,
-                    'title' => $this->generateTitle($faker, $type, $attributes),
+                    'title' => $title, // TITLE IS EXPLICITLY SET
                     'description' => $faker->paragraphs(3, true),
-                    'price' => $faker->randomFloat(2, 10000, 10000000),                   
-                    'attributes' => $attributes,
+                    'price' => $faker->randomFloat(2, 10000, 10000000),
+                    'attributes' => json_encode($attributes), // Explicit JSON encoding
                     'address' => $faker->streetAddress,
                     'city' => $faker->city,
-                    'state' => $faker->randomElement(['Lagos', 'Abuja', 'Rivers', 'Kano', 'Ogun']),                  
-                    'image' => $faker->imageUrl(800, 600, 'business', true),                   
-                    'status' => $faker->randomElement(['active', 'sold', 'pending']),               
-                    'is_verified' => $faker->boolean(70),
-                    'user_id' => 1, // Assuming user with ID 1 exists
-                    'views' => $faker->numberBetween(0, 1000)
-                ]);
+                    'state' => $faker->randomElement(['Lagos', 'Abuja', 'Rivers', 'Kano', 'Ogun']),
+                    'image' => $faker->imageUrl(800, 600, 'business', true),
+                    'status' => $faker->randomElement(['active', 'sold', 'pending']),
+                    'is_verified' => $faker->boolean(70) ? 1 : 0,
+                    'user_id' => 1,
+                    'views' => $faker->numberBetween(0, 1000),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                // Debug: Show what we're inserting
+                $this->command->info("Inserting: {$data['title']} (Type: {$type})");
+                
+                // Insert directly using DB facade (bypasses all Eloquent issues)
+                DB::table('listings')->insert($data);
             }
         }
+        
+        $this->command->info('✓ Listings seeded successfully!');
     }
-
+    
     private function generateFakeValue($faker, $fieldConfig)
     {
         switch ($fieldConfig['type']) {
@@ -51,29 +78,46 @@ class ListingsTableSeeder extends Seeder
                 return $faker->numberBetween(1, 100);
             case 'select':
                 $options = $fieldConfig['options'] ?? [];
-                return $faker->randomElement($options);
+                return !empty($options) ? $faker->randomElement($options) : $faker->word;
             case 'date':
                 return $faker->date('Y-m-d');
             default:
                 return $faker->word;
         }
     }
-
-
-
+    
     private function generateTitle($faker, $type, $attributes)
     {
-        $title = ucwords(str_replace('_', ' ', $type));
-
-        if (isset($attributes['make']) && isset($attributes['model'])) {            
-            $year = isset($attributes['year']) ? $attributes['year'] : $faker->year;
-            $title = "{$attributes['make']} {$attributes['model']} - {$year}";
-        } elseif (isset($attributes['property_type'])) {
-            $title = "Beautiful {$attributes['property_type']} for Sale in {$faker->city}";
-        } elseif (isset($attributes['brand']) && isset($attributes['model'])) {
-            $title = "{$attributes['brand']} {$attributes['model']} - Like New";
+        // Handle books_magazines specifically
+        if ($type === 'books_magazines') {
+            $bookTitle = isset($attributes['title']) ? $attributes['title'] : $faker->sentence(3);
+            $author = isset($attributes['author']) ? $attributes['author'] : $faker->name;
+            return "Book: {$bookTitle} by {$author}";
         }
-
-        return $title;
+        
+        // Handle cars
+        if (isset($attributes['make']) && isset($attributes['model'])) {
+            $year = isset($attributes['year']) ? $attributes['year'] : $faker->year;
+            return "{$attributes['make']} {$attributes['model']} - {$year}";
+        }
+        
+        // Handle properties
+        if (isset($attributes['property_type'])) {
+            return "Beautiful {$attributes['property_type']} in {$faker->city}";
+        }
+        
+        // Handle phones
+        if (isset($attributes['brand']) && isset($attributes['model'])) {
+            $storage = isset($attributes['storage']) ? " {$attributes['storage']}" : '';
+            return "{$attributes['brand']} {$attributes['model']}{$storage} - Like New";
+        }
+        
+        // Handle laptops
+        if (isset($attributes['processor'])) {
+            return "High Performance {$attributes['processor']} Laptop";
+        }
+        
+        // Default title
+        return ucwords(str_replace('_', ' ', $type)) . ' - ' . $faker->words(3, true);
     }
 }
