@@ -30,7 +30,11 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ListingsTableSchemaSeeder::class,
             CategorySeeder::class,
+            StateSeeder::class,
+            CitySeeder::class,            
             ListingsTableSeeder::class,
+            ListingGallerySeeder::class,
+            FeaturedListingSeeder::class
         ]);
     }
 }

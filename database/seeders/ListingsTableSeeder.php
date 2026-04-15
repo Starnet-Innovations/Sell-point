@@ -58,8 +58,8 @@ class ListingsTableSeeder extends Seeder
                     'attributes' => json_encode($attributes), // Explicit JSON encoding
                     'condition' => $faker->randomElement(['new', 'used']),
                     'address' => $faker->streetAddress,
-                    'city' => $randomCity->id,
-                    'state' => $randomCity->state_id,
+                    'city_id' => $randomCity->id,
+                    'state_id' => $randomCity->state_id,
                     'image' => $faker->imageUrl(800, 600, 'business', true),
                     'status' => $faker->randomElement(['active', 'sold', 'pending']),
                     'is_verified' => $faker->boolean(70) ? 1 : 0,

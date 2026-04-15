@@ -52,7 +52,7 @@ class CitySeeder extends Seeder
         ];
 
         // Fetch all states at once and key them by their names for quick lookup
-        $states = State::all()->keyBy('name');
+        $states = State::all()->keyBy('title');
         
         $citiesToInsert = [];
 
