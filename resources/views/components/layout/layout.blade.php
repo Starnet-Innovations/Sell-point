@@ -10,13 +10,13 @@
 </head>
 
 <body>
-    <x-layout.navbar />
+    <x-navigation.navbar />
 
     <main>
         {{ $slot }}
     </main>
 
-    <x-layout.footer />
+    <x-navigation.footer />
 
  @stack('scripts')   
  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->string('listing_type'); 
             $table->string('title');
             $table->text('description')->nullable();
-            $table->decimal('price', 12, 2);          
+            $table->decimal('price', 12, 2);     
+            $table->string('condition')->nullable();  
             
             // Dynamic fields stored as JSON
             $table->json('attributes');

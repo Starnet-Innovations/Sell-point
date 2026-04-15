@@ -19,23 +19,15 @@ class ListingSchema extends Model
     // Get all schemas as array
     public static function getSchemas(): array
     {
-        $schemas = self::all();
-        $result = [];
         
-        foreach ($schemas as $schema) {
-            $result[$schema->name] = $schema->schema;
-        }
+        return self::pluck('schema', 'name')->toArray();
 
-        // This replaces your entire foreach loop
-        // $result = ListingSchema::pluck('schema', 'name')->toArray();
-        
-        return $result;
     }
 
     // Get a single schema by name
     public static function getSchema(string $name): ?array
     {
-        $schema = self::where('name', $name)->first();
-        return $schema ? $schema->schema : null;
+        $schema = self::where('name', $name)->value('schema');
+        return $schema ? $schema : null;
     }
 }
