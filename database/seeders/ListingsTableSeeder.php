@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
 use App\Models\ListingSchema;
 use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
@@ -22,6 +21,14 @@ class ListingsTableSeeder extends Seeder
             $this->command->error('No schemas found!');
             return;
         }
+
+        // Fetch all cities 
+        $cities = DB::table('cities')->get();
+        
+        if ($cities->isEmpty()) {
+            $this->command->error('No cities found! Please run StateSeeder and CitySeeder first.');
+            return;
+        }
         
         foreach ($schemas as $type => $schema) {
             $categoryTitle = ucwords(str_replace('_', ' ', $type));
@@ -37,6 +44,9 @@ class ListingsTableSeeder extends Seeder
                 
                 // Generate title
                 $title = $this->generateTitle($faker, $type, $attributes);
+
+                // Pick a random city for this specific listing
+                $randomCity = $cities->random();
                 
                 // Prepare data array with EXPLICIT title field
                 $data = [
@@ -46,9 +56,10 @@ class ListingsTableSeeder extends Seeder
                     'description' => $faker->paragraphs(3, true),
                     'price' => $faker->randomFloat(2, 10000, 10000000),
                     'attributes' => json_encode($attributes), // Explicit JSON encoding
+                    'condition' => $faker->randomElement(['new', 'used']),
                     'address' => $faker->streetAddress,
-                    'city' => $faker->city,
-                    'state' => $faker->randomElement(['Lagos', 'Abuja', 'Rivers', 'Kano', 'Ogun']),
+                    'city' => $randomCity->id,
+                    'state' => $randomCity->state_id,
                     'image' => $faker->imageUrl(800, 600, 'business', true),
                     'status' => $faker->randomElement(['active', 'sold', 'pending']),
                     'is_verified' => $faker->boolean(70) ? 1 : 0,
